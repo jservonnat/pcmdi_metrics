@@ -31,6 +31,18 @@ parser.add_argument(
     default=False,
     action="store_true",
     help="Verbose output")
+parser.add_argument(
+    "-T",
+    "--traceback",
+    default=False,
+    action="store_true",
+    help="output traceback on exceptions")
+parser.add_argument(
+    "-U",
+    "--update",
+    default=False,
+    action="store_true",
+    help="replace correct test files")
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -41,10 +53,12 @@ params = ["basic_test_parameters_file.py",
           "keep_going_on_error_varname_test.py",
           "obs_by_name_test.py",
           "salinity_test.py",
+          "region_specs_test.py",
+          "level_data_test.py",
           ]
 
 others = ["flake8", ]
-graphics = ["test_portrait", ]
+graphics = ["test_portrait", "test_pcoord", ]
 
 if args.test is not None:
     tests = args.test
@@ -79,13 +93,13 @@ for t in tests:
                 os.path.join(
                     pth,
                     "pcmdi",
-                    t)))
+                    t), traceback=args.traceback, update_files=args.update))
     if t in graphics:
         try:
             # If we have vcs we can test graphics
             import vcs  # noqa
-            import test_portrait
-            suite.addTest(test_portrait.TestGraphics(t))
+            import test_graphics
+            suite.addTest(test_graphics.TestGraphics(t))
         except Exception as err:
             print "ERROR import vcs, skipping graphics test (%s)..." % t
             pass
@@ -96,7 +110,6 @@ else:
     verbosity = 1
 
 results = unittest.TextTestRunner(verbosity=verbosity).run(suite)
-print dir(results)
 if results.wasSuccessful():
     sys.exit()
 else:
